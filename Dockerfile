@@ -65,6 +65,6 @@ CMD sh -c "\
 
 # Labels for better container management
 LABEL maintainer="nishtha"
-LABEL version="1.0.0"
+LABEL version="1.1.0"
 LABEL description="Parabank Automation Testing Container"
 LABEL project="cucumber-playwright-javascript"
