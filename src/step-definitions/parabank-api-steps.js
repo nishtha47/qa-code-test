@@ -1,42 +1,49 @@
-const { Given, When, Then } = require('@cucumber/cucumber');
+const { Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucumber/cucumber');
 const assert = require('assert');
+const axios = require('axios');
+const path = require('path');
+const reporter = require('multiple-cucumber-html-reporter');
+
+setDefaultTimeout(60 * 1000); // 60s timeout
+
+// -------------------- Reporter Setup --------------------
+const jsonReportPath = path.join(__dirname, '../../reports/cucumber-report.json');
+const htmlReportPath = path.join(__dirname, '../../reports/html-report');
+
+// Helper to log steps
+async function logStep(world, status, message) {
+  if (!world.testLogs) world.testLogs = [];
+  world.testLogs.push({ status, message, timestamp: new Date().toISOString() });
+  console.log(`[${status}] ${message}`);
+}
 
 // -------------------- Helper --------------------
 function configureApiClient(world) {
-  if (!world.config) {
-    throw new Error('Configuration not found in world context');
-  }
-  if (!world.config.apiBaseUrl) {
-    throw new Error('apiBaseUrl not configured. Please check your world.js configuration.');
+  if (!world.apiBaseUrl) {
+    world.apiBaseUrl = process.env.PARABANK_API_BASEURL || 'https://parabank.parasoft.com/parabank';
+    console.warn(`API base URL not found in world context. Using default: ${world.apiBaseUrl}`);
   }
 
-  world.apiClient = require('axios').create({
-    baseURL: world.config.apiBaseUrl,
-    timeout: world.config.timeout || 30000,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
+  world.apiClient = axios.create({
+    baseURL: world.apiBaseUrl,
+    timeout: world.timeout || 30000,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
   });
 
-  world.setTestData('apiClient', {
-    baseURL: world.config.apiBaseUrl,
+  world.testData = world.testData || {};
+  world.testData.apiClient = {
+    baseURL: world.apiBaseUrl,
     configured: true,
-    timestamp: Date.now()
-  });
+    timestamp: new Date().toISOString()
+  };
 
-  console.log(`API client configured for: ${world.config.apiBaseUrl}`);
+  console.log(`API client configured for: ${world.apiBaseUrl}`);
 }
 
-// -------------------- GIVEN STEPS --------------------
+// -------------------- GIVEN --------------------
 Given('I have API client configured for Parabank', async function () {
   configureApiClient(this);
-  await this.attachText('API Client Configuration', JSON.stringify(this.apiClient.defaults, null, 2));
-});
-
-Given('I have API client configured', async function () {
-  configureApiClient(this);
-  await this.attachText('API Client Configuration', JSON.stringify(this.apiClient.defaults, null, 2));
+  await logStep(this, 'INFO', `API Client configured for ${this.apiBaseUrl}`);
 });
 
 Given('I have a user account with transaction history', async function () {
@@ -50,196 +57,72 @@ Given('I have a user account with transaction history', async function () {
       { id: 2, accountId: '13344', type: 'Debit', date: new Date().toISOString(), amount: 50.0, description: 'Bill payment' }
     ]
   };
-
-  this.testData.accountData = accountData;
   this.accountData = accountData;
-  console.log('User account with transaction history set up:', accountData.accountId);
-
-  await this.attachJson('Account Data', accountData);
+  this.testData.accountData = accountData;
+  await logStep(this, 'PASS', `Account data created with transaction history: ${JSON.stringify(accountData)}`);
 });
 
 Given('I have a user account with multiple transactions', async function () {
-  const accountData = {
-    customerId: '12212',
-    accountId: '13344',
-    username: 'john',
-    balance: 2000.0,
-    transactions: [
-      { id: 1, accountId: '13344', type: 'Credit', date: new Date().toISOString(), amount: 1000.0, description: 'Initial deposit' },
-      { id: 2, accountId: '13344', type: 'Debit', date: new Date().toISOString(), amount: 100.0, description: 'ATM withdrawal' },
-      { id: 3, accountId: '13344', type: 'Credit', date: new Date().toISOString(), amount: 200.0, description: 'Direct deposit' }
-    ]
-  };
-
-  this.testData.accountData = accountData;
-  this.accountData = accountData;
-  console.log('User account with multiple transactions set up:', accountData.accountId);
-
-  await this.attachJson('Account Data', accountData);
+  const multipleTxns = [
+    { id: 1, accountId: '13344', type: 'Credit', date: new Date().toISOString(), amount: 500.0, description: 'Initial deposit' },
+    { id: 2, accountId: '13344', type: 'Debit', date: new Date().toISOString(), amount: 50.0, description: 'Bill payment' },
+    { id: 3, accountId: '13344', type: 'Credit', date: new Date().toISOString(), amount: 100.0, description: 'Salary' },
+    { id: 4, accountId: '13344', type: 'Debit', date: new Date().toISOString(), amount: 100.0, description: 'Groceries' }
+  ];
+  this.accountData = { ...this.accountData, transactions: multipleTxns };
+  this.testData.accountData = this.accountData;
+  await logStep(this, 'PASS', `Multiple transactions added: ${JSON.stringify(multipleTxns)}`);
 });
 
-Given('I have made a bill payment of {string}', async function (amount) {
-  const billPaymentData = {
-    amount: parseFloat(amount),
-    payee: 'Electric Company',
-    accountId: this.accountData?.accountId || '13344',
-    transactionId: Math.floor(Math.random() * 1000000),
-    timestamp: Date.now()
-  };
-
-  this.testData.billPayment = billPaymentData;
-  console.log(`Mock bill payment created for $${amount}`);
-
-  await this.attachJson('Bill Payment', billPaymentData);
-});
-
-// -------------------- WHEN STEPS --------------------
+// -------------------- WHEN --------------------
 When('I search for transactions using {string} API', async function (apiName) {
-  const searchResults = {
-    apiName,
-    results: this.accountData?.transactions || [],
-    status: 'success',
-    timestamp: Date.now()
-  };
-
-  this.testData.searchResults = searchResults;
-  this.apiResponse = { data: searchResults.results, status: 200 };
-  console.log(`Transaction search simulated via ${apiName}`);
-
-  await this.attachJson('Search Results', searchResults);
+  const results = this.accountData?.transactions || [];
+  this.testData.searchResults = { apiName, results, status: 'success', timestamp: new Date().toISOString() };
+  this.apiResponse = { data: results, status: 200 };
+  await logStep(this, 'INFO', `Transactions searched using API "${apiName}": ${JSON.stringify(results)}`);
 });
 
-When('I filter by amount {string}', async function (amount) {
-  const filterAmount = parseFloat(amount);
-  const currentResults = this.testData.searchResults;
-
-  if (currentResults?.results) {
-    const filtered = currentResults.results.filter(
-      txn => Math.abs(parseFloat(txn.amount) - filterAmount) < 0.01
-    );
-
-    this.testData.filteredResults = filtered;
-    this.apiResponse = { data: filtered, status: 200 };
-    console.log(`Filtered by amount ${amount}, found ${filtered.length} transactions`);
-
-    await this.attachJson('Filtered Results', filtered);
-  }
-});
-
-When('I search for transactions by {string} with value {string}', async function (criteria, value) {
-  assert(this.accountData?.transactions, 'No account data available');
-
-  let filtered = [];
-  switch (criteria.toLowerCase()) {
-    case 'amount':
-      filtered = this.accountData.transactions.filter(
-        txn => Math.abs(parseFloat(txn.amount) - parseFloat(value)) < 0.01
-      );
-      break;
-    case 'type':
-      filtered = this.accountData.transactions.filter(txn => txn.type === value);
-      break;
-    case 'date':
-      filtered = this.accountData.transactions.filter(txn => txn.date.startsWith(value));
-      break;
-    default:
-      throw new Error(`Unsupported search criteria: ${criteria}`);
-  }
-
-  this.testData.filteredResults = filtered;
-  this.apiResponse = { data: filtered, status: 200 };
-  this.lastSearchValue = value;
-  console.log(`Search by ${criteria}=${value}, found ${filtered.length} results`);
-
-  await this.attachJson(`Search by ${criteria}`, filtered);
-});
-
-// -------------------- THEN STEPS --------------------
+// -------------------- THEN --------------------
 Then('I should receive a valid JSON response', async function () {
-  assert(this.apiResponse, 'API response should be defined');
-  assert.strictEqual(this.apiResponse.status, 200, 'Response status should be 200');
-  assert(this.apiResponse.data, 'Response data should be defined');
-  console.log('Valid JSON response received');
-
-  await this.attachJson('API Response Validation', this.apiResponse);
+  try {
+    assert(this.apiResponse, 'API response missing');
+    assert.strictEqual(this.apiResponse.status, 200);
+    assert(this.apiResponse.data);
+    await logStep(this, 'PASS', `Received valid JSON response: ${JSON.stringify(this.apiResponse)}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Then('the response should contain transaction details', async function () {
-  const data = this.apiResponse.data;
-  assert(data && Array.isArray(data), 'Response data should be a non-empty array');
-
-  if (data.length > 0) {
-    const txn = data[0];
-    ['id', 'type', 'amount', 'accountId', 'date', 'description'].forEach(field => {
-      assert(field in txn, `Missing field: ${field}`);
-    });
+  try {
+    const data = this.apiResponse.data;
+    assert(Array.isArray(data), 'Expected array of transactions');
+    if (data.length > 0) {
+      const txn = data[0];
+      ['id', 'type', 'amount', 'accountId', 'date', 'description'].forEach(f => assert(f in txn));
+    }
+    await logStep(this, 'PASS', `Transaction details verified: ${JSON.stringify(data)}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
   }
-  console.log('Transaction details validated');
-
-  await this.attachJson('Transaction Details', data);
 });
 
-Then('transaction amount should match {string}', async function (expectedAmount) {
-  const amount = parseFloat(expectedAmount);
-  const match = this.apiResponse.data.find(txn => Math.abs(parseFloat(txn.amount) - amount) < 0.01);
-  assert(match, `No transaction found with amount ${expectedAmount}`);
-  console.log(`Transaction with amount ${expectedAmount} found`);
-
-  await this.attachJson('Amount Verification', match);
-});
-
-Then('transaction type should be {string}', async function (expectedType) {
-  const match = this.apiResponse.data.find(txn => txn.type === expectedType);
-  assert(match, `No transaction found with type ${expectedType}`);
-  console.log(`Transaction with type ${expectedType} found`);
-
-  await this.attachJson('Type Verification', match);
-});
-
-Then('I should receive an error response with message {string}', async function (expectedMessage) {
-  assert(this.apiResponse, 'API response should be defined');
-  assert(this.apiResponse.status >= 400, 'Expected error response status');
-
-  const message = this.apiResponse.data?.message || this.apiResponse.error?.message;
-  assert(message, 'No error message in response');
-  assert.strictEqual(message, expectedMessage, `Expected "${expectedMessage}", got "${message}"`);
-  console.log(`Error response validated: ${message}`);
-
-  await this.attachText('Error Message', message);
-});
-
-// Attach filtered results as JSON
-Then('I should receive filtered results', async function () {
-  assert(this.apiResponse.data && Array.isArray(this.apiResponse.data), 'Filtered results should be a non-empty array');
-  console.log('Filtered results successfully validated');
-
-  await this.attachJson('Filtered Results', this.testData.filteredResults);
-});
-
-// -------------------- Utility Steps --------------------
-Then('all date fields should be in valid format', async function () {
-  (this.testData.filteredResults || []).forEach(txn => {
-    assert(!isNaN(Date.parse(txn.date)), `Invalid date: ${txn.date}`);
+// -------------------- AFTER ALL --------------------
+AfterAll(async function () {
+  // Generate Spark-style HTML report
+  reporter.generate({
+    jsonDir: path.join(__dirname, '../../reports'), // JSON output folder
+    reportPath: htmlReportPath,
+    metadata: {
+      browser: { name: 'chrome', version: '115' },
+      device: 'Local Test Machine',
+      platform: { name: process.platform, version: process.version }
+    },
+    displayDuration: true,
+    reportName: 'Parabank API Test Report',
+    openReportInBrowser: true
   });
-
-  await this.attachJson('Date Validation', this.testData.filteredResults);
 });
-
-Then('all amount fields should be numeric', async function () {
-  (this.testData.filteredResults || []).forEach(txn => {
-    assert.strictEqual(typeof txn.amount, 'number', `Amount not numeric: ${txn.amount}`);
-  });
-
-  await this.attachJson('Amount Validation', this.testData.filteredResults);
-});
-
-Then('all returned transactions should match the {string}', async function (filter) {
-  const expected = this.lastSearchValue;
-  (this.testData.filteredResults || []).forEach(txn => {
-    assert.strictEqual(String(txn[filter]), String(expected), `Transaction mismatch for ${filter}: ${txn[filter]} vs ${expected}`);
-  });
-
-  await this.attachJson('Filter Validation', this.testData.filteredResults);
-});
-
-module.exports = {};

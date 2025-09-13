@@ -1,33 +1,45 @@
-const { Given, When, Then, setDefaultTimeout } = require('@cucumber/cucumber');
-const { expect } = require('@playwright/test');
-const { allure } = require('allure-cucumberjs'); // Add allure adapter
+const { Given, When, Then, setDefaultTimeout, AfterAll } = require('@cucumber/cucumber');
+const path = require('path');
+const setDefaultTimeoutMs = 60 * 1000;
+setDefaultTimeout(setDefaultTimeoutMs);
 
-setDefaultTimeout(60 * 1000);
+const reporter = require('multiple-cucumber-html-reporter');
+
+// -------------------- Helper --------------------
+async function logStep(world, status, message) {
+  if (!world.testLogs) world.testLogs = [];
+  world.testLogs.push({ status, message, timestamp: new Date().toISOString() });
+  console.log(`[${status}] ${message}`);
+}
 
 // -------------------- GIVEN STEPS --------------------
-
 Given('I navigate to Parabank application', async function () {
+  try {
     await this.initBrowser();
     await this.page.goto(this.config.baseUrl);
     await this.page.waitForLoadState('networkidle');
-
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/navigate.png', fullPage: true });
-    allure.attachment('Navigate to Parabank', screenshot, 'image/png');
+    await logStep(this, 'PASS', 'Navigated to Parabank application');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Given('I am on the Parabank homepage', async function () {
+  try {
     await this.page.goto(this.config.baseUrl);
     await this.page.waitForSelector('title');
     const title = await this.page.title();
-    if (!title.includes('ParaBank')) {
-        throw new Error('Not on ParaBank homepage');
-    }
-
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/homepage.png', fullPage: true });
-    allure.attachment('Homepage', screenshot, 'image/png');
+    if (!title.includes('ParaBank')) throw new Error('Not on ParaBank homepage');
+    await logStep(this, 'PASS', `Verified Parabank homepage title: ${title}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Given('I have registered and logged in with a new user', async function () {
+  try {
     const userData = this.generateUniqueUserData();
     this.setTestData('currentUser', userData);
 
@@ -47,18 +59,22 @@ Given('I have registered and logged in with a new user', async function () {
     await this.page.click('input[value="Register"]');
     await this.page.waitForSelector('h1:has-text("Welcome")', { timeout: 10000 });
 
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/registration.png', fullPage: true });
-    allure.attachment('User Registration Completed', screenshot, 'image/png');
+    await logStep(this, 'PASS', `Registered and logged in new user: ${userData.username}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Given('I have created a savings account', async function () {
+  try {
     await this.page.goto(`${this.config.baseUrl}/openaccount.htm`);
     await this.page.selectOption('#type', 'SAVINGS');
 
     const fromOptions = await this.page.locator('#fromAccountId option').all();
     if (fromOptions.length > 1) {
-        const value = await fromOptions[1].getAttribute('value');
-        await this.page.selectOption('#fromAccountId', value);
+      const value = await fromOptions[1].getAttribute('value');
+      await this.page.selectOption('#fromAccountId', value);
     }
 
     await this.page.click('input[value="Open New Account"]');
@@ -66,27 +82,31 @@ Given('I have created a savings account', async function () {
     const accountNumber = (await this.page.textContent('#newAccountId')).trim();
     this.setTestData('newSavingsAccount', accountNumber);
 
-    const screenshot = await this.page.screenshot({ path: `reports/screenshots/newAccount-${accountNumber}.png`, fullPage: true });
-    allure.attachment(`Created Savings Account: ${accountNumber}`, screenshot, 'image/png');
-
-    console.log(`Created savings account: ${accountNumber}`);
+    await logStep(this, 'PASS', `Created Savings Account: ${accountNumber}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Given('I have created a savings account with sufficient balance', async function () {
-    await this.step('I have created a savings account');
+  await this.step('I have created a savings account');
 });
 
 // -------------------- WHEN STEPS --------------------
-
 When('I click on Register link', async function () {
+  try {
     await this.page.click('a[href*="register"]');
     await this.page.waitForSelector('#customer\\.firstName');
-
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/register-link.png', fullPage: true });
-    allure.attachment('Clicked Register Link', screenshot, 'image/png');
+    await logStep(this, 'PASS', 'Clicked Register link');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 When('I fill the registration form with unique user details', async function () {
+  try {
     const userData = this.generateUniqueUserData();
     this.setTestData('registrationData', userData);
 
@@ -102,52 +122,94 @@ When('I fill the registration form with unique user details', async function () 
     await this.page.fill('#customer\\.password', userData.password);
     await this.page.fill('#repeatedPassword', userData.password);
 
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/registration-form-filled.png', fullPage: true });
-    allure.attachment('Registration Form Filled', screenshot, 'image/png');
+    await logStep(this, 'PASS', 'Filled registration form with unique user details');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 When('I submit the registration form', async function () {
+  try {
     await this.page.click('input[value="Register"]');
-
-    const screenshot = await this.page.screenshot({ path: 'reports/screenshots/form-submitted.png', fullPage: true });
-    allure.attachment('Registration Form Submitted', screenshot, 'image/png');
+    await logStep(this, 'PASS', 'Submitted registration form');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 When('I navigate to {string} page', async function (pageName) {
+  try {
     const pageMap = {
-        'Open New Account': '/openaccount.htm',
-        'Accounts Overview': '/overview.htm',
-        'Transfer Funds': '/transfer.htm',
-        'Bill Pay': '/billpay.htm',
-        'Find Transactions': '/findtrans.htm'
+      'Open New Account': '/openaccount.htm',
+      'Accounts Overview': '/overview.htm',
+      'Transfer Funds': '/transfer.htm',
+      'Bill Pay': '/billpay.htm',
+      'Find Transactions': '/findtrans.htm'
     };
     const pagePath = pageMap[pageName];
     if (!pagePath) throw new Error(`Unknown page: ${pageName}`);
     await this.page.goto(`${this.config.baseUrl}${pagePath}`);
     await this.page.waitForLoadState('networkidle');
-
-    const screenshot = await this.page.screenshot({ path: `reports/screenshots/navigate-${pageName}.png`, fullPage: true });
-    allure.attachment(`Navigated to ${pageName} Page`, screenshot, 'image/png');
+    await logStep(this, 'PASS', `Navigated to ${pageName} page`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 // -------------------- THEN STEPS --------------------
-
 Then('I should see account creation success message', async function () {
+  try {
     await this.page.waitForSelector('#openAccountResult');
     const message = await this.page.textContent('#openAccountResult');
     if (!message.includes('Congratulations')) throw new Error('Account creation failed');
-
-    allure.logStep('Account creation message validated');
+    await logStep(this, 'PASS', `Account creation success message: ${message}`);
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Then('I should see payment success message', async function () {
-    await this.page.waitForSelector('#billPayForm'); // adjust selector as needed
-    allure.logStep('Payment success message displayed');
+  try {
+    await this.page.waitForSelector('#billPayForm');
+    await logStep(this, 'PASS', 'Payment success message displayed');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
 });
 
 Then('I should see transfer success message', async function () {
-    await this.page.waitForSelector('#transferFundsForm'); // adjust selector as needed
-    allure.logStep('Transfer success message displayed');
+  try {
+    await this.page.waitForSelector('#transferFundsForm');
+    await logStep(this, 'PASS', 'Transfer success message displayed');
+  } catch (err) {
+    await logStep(this, 'FAIL', err.message);
+    throw err;
+  }
+});
+
+// -------------------- AFTER ALL --------------------
+AfterAll(async function () {
+  // Generate HTML report
+  const jsonReportDir = path.join(__dirname, '../../reports');
+  const htmlReportPath = path.join(jsonReportDir, 'ui-html-report');
+
+  reporter.generate({
+    jsonDir: jsonReportDir,
+    reportPath: htmlReportPath,
+    displayDuration: true,
+    reportName: 'Parabank UI Test Report',
+    openReportInBrowser: true,
+    metadata: {
+      browser: { name: 'chrome', version: '115' },
+      device: 'Local Test Machine',
+      platform: { name: process.platform, version: process.version }
+    }
+  });
 });
 
 module.exports = {};

@@ -1,133 +1,41 @@
-const reporter = require('cucumber-html-reporter');
-const puppeteer = require('puppeteer');
-const fs = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
+const { ReportAggregator, HtmlReporter } = require('wdio-html-nice-reporter'); // Example Extent-like reporter
 
-const reportsDir = path.join(__dirname, 'reports');
-const jsonReport = path.join(reportsDir, 'cucumber-report.json');
-const extentDir = path.join(reportsDir, 'extent');
-const htmlReportFile = path.join(extentDir, 'index.html');
-const pdfReportFile = path.join(extentDir, 'report.pdf');
+// Paths
+const cucumberJsonPath = path.join(__dirname, 'reports', 'combined-cucumber-report.json');
+const extentReportDir = path.join(__dirname, 'reports', 'extent');
 
-fs.ensureDirSync(extentDir);
+// Ensure output directory exists
+if (!fs.existsSync(extentReportDir)) {
+    fs.mkdirSync(extentReportDir, { recursive: true });
+}
 
-// ---------------------
-// Generate HTML Report
-// ---------------------
-reporter.generate({
-  theme: 'bootstrap',
-  jsonFile: jsonReport,
-  output: htmlReportFile,
-  reportSuiteAsScenarios: true,
-  scenarioTimestamp: true,
-  launchReport: false,
-  brandTitle: "ParaBank Automation Report",
-  metadata: {
-    "Test Environment": "QA",
-    "Platform": process.platform,
-    "Executed": "Local",
-    "Browser": "Playwright"
-  },
-  columnLayout: 2,
-  storeScreenshots: true,
-  screenshotsDirectory: 'screenshots',
-  reportName: 'Automation Test Report',
-  customData: {
-    title: 'Run Info',
-    data: [
-      { label: 'Project', value: 'ParaBank Automation' },
-      { label: 'Release', value: '1.0' },
-      { label: 'Cycle', value: 'Regression' },
-      { label: 'Execution Start Time', value: new Date().toLocaleString() }
-    ]
-  }
+// Check if Cucumber JSON exists
+if (!fs.existsSync(cucumberJsonPath)) {
+    console.error(`❌ Cucumber JSON report not found at ${cucumberJsonPath}`);
+    process.exit(1);
+}
+
+// Load JSON
+const cucumberData = JSON.parse(fs.readFileSync(cucumberJsonPath, 'utf-8'));
+
+// Initialize report aggregator
+const reportAggregator = new ReportAggregator({
+    outputDir: extentReportDir,
+    filename: 'index.html',
+    reportTitle: 'Parabank Automation Extent Spark Report',
+    browserName: 'N/A',
+    collapseTests: true,
+    displayDuration: true,
 });
 
-// ---------------------
-// Collect Historical Data for Trend Chart
-// ---------------------
-const jsonFiles = fs.readdirSync(reportsDir)
-  .filter(f => f.startsWith('cucumber-report') && f.endsWith('.json'));
-
-let labels = [];
-let passedData = [];
-let failedData = [];
-let skippedData = [];
-
-jsonFiles.sort().forEach((file, index) => {
-  const data = fs.readJsonSync(path.join(reportsDir, file));
-  const summary = { passed: 0, failed: 0, skipped: 0 };
-  
-  data.forEach(feature => {
-    feature.elements.forEach(scenario => {
-      const steps = scenario.steps || [];
-      steps.forEach(step => {
-        if (step.result.status === 'passed') summary.passed += 1;
-        if (step.result.status === 'failed') summary.failed += 1;
-        if (step.result.status === 'skipped') summary.skipped += 1;
-      });
+// Add JSON data to report
+reportAggregator.createReport(cucumberData)
+    .then(() => {
+        console.log(`✅ Extent Spark report generated at ${path.join(extentReportDir, 'index.html')}`);
+    })
+    .catch((err) => {
+        console.error('❌ Failed to generate Extent report:', err);
+        process.exit(1);
     });
-  });
-
-  labels.push(`Run ${index + 1}`);
-  passedData.push(summary.passed);
-  failedData.push(summary.failed);
-  skippedData.push(summary.skipped);
-});
-
-// ---------------------
-// Append Chart.js Trend Chart
-// ---------------------
-const trendChartScript = `
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<div style="width: 70%; margin: auto;">
-  <canvas id="trendChart"></canvas>
-</div>
-<script>
-  const ctx = document.getElementById('trendChart').getContext('2d');
-  const trendChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ${JSON.stringify(labels)},
-      datasets: [{
-        label: 'Passed',
-        data: ${JSON.stringify(passedData)},
-        borderColor: 'green',
-        fill: false
-      },{
-        label: 'Failed',
-        data: ${JSON.stringify(failedData)},
-        borderColor: 'red',
-        fill: false
-      },{
-        label: 'Skipped',
-        data: ${JSON.stringify(skippedData)},
-        borderColor: 'orange',
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Regression Test Run Trend' }
-      }
-    }
-  });
-</script>
-`;
-
-fs.appendFileSync(htmlReportFile, trendChartScript, 'utf-8');
-console.log(`✅ HTML report with trend chart generated at ${htmlReportFile}`);
-
-// ---------------------
-// Generate PDF from HTML
-// ---------------------
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(`file://${htmlReportFile}`, { waitUntil: 'networkidle0' });
-  await page.pdf({ path: pdfReportFile, format: 'A4', printBackground: true });
-  await browser.close();
-  console.log(`✅ PDF report with chart generated at ${pdfReportFile}`);
-})();

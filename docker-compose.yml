@@ -1,0 +1,197 @@
+# Removed version as it's obsolete in newer Docker Compose versions
+
+services:
+  # Main automation testing service
+  parabank-automation:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: parabank-automation
+    environment:
+      - HEADLESS=true
+      - NODE_ENV=production
+      - PARABANK_URL=https://parabank.parasoft.com/parabank
+      - PARABANK_API_URL=https://parabank.parasoft.com/parabank/services/bank
+      - DISPLAY=:99
+      - SCREENSHOT_ON_STEP=false
+    volumes:
+      - ./reports:/app/reports
+      - ./src/features/support/reports:/app/src/features/support/reports
+      - ./allure-results:/app/allure-results
+    networks:
+      - automation-network
+    command: npm run test:ci
+    restart: unless-stopped
+
+  # Service for API-only testing
+  parabank-api-tests:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: parabank-api-tests
+    environment:
+      - NODE_ENV=production
+      - PARABANK_API_URL=https://parabank.parasoft.com/parabank/services/bank
+    volumes:
+      - ./reports:/app/reports
+    networks:
+      - automation-network
+    command: npm run test:ci:api
+    profiles:
+      - api-only
+
+  # Service for UI-only testing
+  parabank-ui-tests:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: parabank-ui-tests
+    environment:
+      - HEADLESS=true
+      - NODE_ENV=production
+      - PARABANK_URL=https://parabank.parasoft.com/parabank
+      - DISPLAY=:99
+      - SCREENSHOT_ON_STEP=true
+    volumes:
+      - ./reports:/app/reports
+      - ./src/features/support/screenshots:/app/src/features/support/screenshots
+      - ./src/features/support/videos:/app/src/features/support/videos
+    networks:
+      - automation-network
+    command: npm run test:ci:ui
+    profiles:
+      - ui-only
+
+  # Service for smoke testing
+  parabank-smoke-tests:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: parabank-smoke-tests
+    environment:
+      - HEADLESS=true
+      - NODE_ENV=production
+      - PARABANK_URL=https://parabank.parasoft.com/parabank
+      - PARABANK_API_URL=https://parabank.parasoft.com/parabank/services/bank
+    volumes:
+      - ./reports:/app/reports
+    networks:
+      - automation-network
+    command: npm run test:smoke
+    profiles:
+      - smoke
+
+  # Jenkins agent (optional - for Jenkins Docker integration)
+  jenkins-agent:
+    image: jenkins/inbound-agent:latest
+    container_name: jenkins-parabank-agent
+    environment:
+      - JENKINS_URL=${JENKINS_URL:-http://jenkins:8080}
+      - JENKINS_SECRET=${JENKINS_SECRET:-}
+      - JENKINS_AGENT_NAME=${JENKINS_AGENT_NAME:-parabank-agent}
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    volumes:
+      - jenkins-agent-workdir:/home/jenkins/agent
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    networks:
+      - automation-network
+    profiles:
+      - jenkins-agent
+    depends_on:
+      - parabank-automation
+
+  # Allure report server (optional)
+  allure-server:
+    image: frankescobar/allure-docker-service
+    container_name: allure-server
+    environment:
+      CHECK_RESULTS_EVERY_SECONDS: 1
+      KEEP_HISTORY: 1
+      KEEP_HISTORY_LATEST: 25
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./allure-reports:/app/default-reports
+    networks:
+      - automation-network
+    profiles:
+      - allure
+
+  # Web server for serving reports (FIXED)
+  report-server:
+    image: nginx:alpine
+    container_name: report-server
+    ports:
+      - "8080:80"
+    volumes:
+      # Mount the entire reports directory to nginx root
+      - ./reports:/usr/share/nginx/html
+      # Also mount individual report directories for easier access
+      - ./src/features/support/reports:/usr/share/nginx/html/support-reports
+      # Mount custom nginx config if it exists, otherwise use default
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - automation-network
+    profiles:
+      - reports
+    # Add healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  automation-network:
+    driver: bridge
+    name: parabank-automation-network
+
+volumes:
+  jenkins-agent-workdir:
+    name: jenkins-agent-workdir
+  allure-reports:
+    name: allure-reports
+
+# Usage Examples:
+# 
+# Run all tests:
+# docker-compose up parabank-automation
+#
+# Run API tests only:
+# docker-compose --profile api-only up parabank-api-tests
+#
+# Run UI tests only:
+# docker-compose --profile ui-only up parabank-ui-tests
+#
+# Run smoke tests:
+# docker-compose --profile smoke up parabank-smoke-tests
+#
+# Run with Allure reporting:
+# docker-compose --profile allure up parabank-automation allure-server
+#
+# Run with Jenkins agent:
+# docker-compose --profile jenkins-agent up
+#
+# Run with report server:
+# docker-compose --profile reports up parabank-automation report-server
+#
+# Development mode (rebuild and run):
+# docker-compose up --build parabank-automation
+#
+# Run in background:
+# docker-compose up -d parabank-automation
+#
+# View logs:
+# docker-compose logs -f parabank-automation
+#
+# Clean up:
+# docker-compose down -v
+# docker-compose down --rmi all -v
+#
+# Access reports after running:
+# Main reports: http://localhost:8080/
+# HTML reports: http://localhost:8080/html-report/
+# UI reports: http://localhost:8080/ui-html-report/
+# Support reports: http://localhost:8080/support-reports/

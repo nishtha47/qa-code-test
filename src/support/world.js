@@ -1,24 +1,25 @@
-const { setWorldConstructor } = require('@cucumber/cucumber');
+const { setWorldConstructor, World } = require('@cucumber/cucumber');
 const { chromium } = require('playwright');
-const { addAttachment } = require('@shelex/allure-commandline'); // Allure helper
-const { allure } = require('@shelex/allure-commandline'); // ✅ Add this
+const fs = require('fs');
 
-
-class CustomWorld {
-    constructor() {
-        // Configuration for UI and API
-        this.config = {
-            baseUrl: process.env.PARABANK_BASE_URL || 'https://parabank.parasoft.com',
-            apiBaseUrl: process.env.PARABANK_API_URL || 'https://parabank.parasoft.com/api'
-        };
-
-        this.testData = {}; // store test-specific data
+class CustomWorld extends World {
+    constructor(options) {
+        super(options);
         this.browser = null;
-        this.context = null;
         this.page = null;
+        this.config = { baseUrl: 'https://parabank.parasoft.com' };
+        this.testData = {};
     }
 
-    // Test data helpers
+    async initBrowser() {
+        this.browser = await chromium.launch({ headless: false });
+        this.page = await this.browser.newPage();
+    }
+
+    async closeBrowser() {
+        if (this.browser) await this.browser.close();
+    }
+
     setTestData(key, value) {
         this.testData[key] = value;
     }
@@ -27,51 +28,45 @@ class CustomWorld {
         return this.testData[key];
     }
 
-    // Browser helpers
-    async initBrowser(headless = true) {
-        this.browser = await chromium.launch({ headless });
-        this.context = await this.browser.newContext();
-        this.page = await this.context.newPage();
-    }
-
-    async closeBrowser() {
-        if (this.browser) {
-            await this.browser.close();
-        }
-    }
-
-    // Generate unique user
-    generateUniqueUserData() {
-        const random = Math.floor(Math.random() * 100000);
-        return {
-            firstName: 'TestFirst' + random,
-            lastName: 'TestLast' + random,
-            address: '123 Main St',
-            city: 'Anytown',
-            state: 'CA',
-            zipCode: '12345',
-            phoneNumber: '555-1234',
-            ssn: '123-45-6789',
-            username: 'user' + random,
-            password: 'Password123!'
-        };
-    }
-
-    // **Allure helpers**
-    async attachScreenshot(name = 'Screenshot') {
+    async attachScreenshot(name) {
         if (this.page) {
             const buffer = await this.page.screenshot();
-            // Add screenshot to Allure report
-            addAttachment(name, buffer, 'image/png');
+            if (this.attach) {
+                await this.attach(buffer, 'image/png');
+            }
         }
     }
 
-    async attachText(name, text) {
-        addAttachment(name, text, 'text/plain');
+    // -------------------- Allure helper --------------------
+    async allureStep(name, stepFn) {
+        if (!this.attach) return stepFn(); // fallback if Allure not attached
+        try {
+            await stepFn();
+        } catch (err) {
+            throw err;
+        }
     }
 
     async attachJson(name, obj) {
-        addAttachment(name, JSON.stringify(obj, null, 2), 'application/json');
+        if (this.attach) {
+            await this.attach(JSON.stringify(obj, null, 2), 'application/json');
+        }
+    }
+
+    generateUniqueUserData() {
+        const random = Math.floor(Math.random() * 10000);
+        return {
+            firstName: `TestFirst${random}`,
+            lastName: `TestLast${random}`,
+            address: '123 Test St',
+            city: 'TestCity',
+            state: 'CA',
+            zipCode: '12345',
+            phoneNumber: '123-456-7890',
+            ssn: `${Math.floor(100000000 + Math.random() * 900000000)}`,
+            username: `user${random}`,
+            password: 'Password123!'
+        };
     }
 }
 
