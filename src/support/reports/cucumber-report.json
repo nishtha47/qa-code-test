@@ -1,0 +1,79 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "example-feature;mtbc-career-portal",
+        "keyword": "Scenario",
+        "line": 8,
+        "name": "mtbc career portal",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 695251899
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 3,
+            "name": "lets open the mtbc career portal 'https://careers.mtbc.com'",
+            "match": {
+              "location": "src\\features\\step_definitions\\career-portal.steps.js:6"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2982778500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 4,
+            "name": "lets login with 'automation@mailinator.com' and 'Mtbc@1234'",
+            "match": {
+              "location": "src\\features\\step_definitions\\career-portal.steps.js:11"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 4537917900
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 5,
+            "name": "logout the career portal",
+            "match": {
+              "location": "src\\features\\step_definitions\\career-portal.steps.js:16"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2402405499
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 544167599
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "example-feature",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Example Feature",
+    "tags": [],
+    "uri": "src\\features\\login.feature"
+  }
+]
