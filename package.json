@@ -4,59 +4,70 @@
   "description": "Cucumber tests with Playwright for ParaBank application",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -rf reports screenshots",
-    "pretest": "npm run clean && mkdir -p reports/screenshots reports/pdf reports/html-report",
-
-    "test": "cucumber-js \"src/features/**/*.feature\" --require \"src/step-definitions/**/*.js\" --require \"src/support/world.js\" --require \"src/support/hooks.js\" --format json:reports/cucumber-report.json",
-
-    "test:ui": "cucumber-js --tags @ui --format json:reports/cucumber-report.json",
-    "test:api": "cucumber-js --tags @api --format json:reports/cucumber-report.json",
-    "test:smoke": "cucumber-js --tags @smoke --format json:reports/cucumber-report.json",
-
+    "clean": "rm -rf reports screenshots allure-results && mkdir -p reports/screenshots reports/pdf reports/html-report reports/json allure-results",
+    "pretest": "npm run clean",
+    "test": "cucumber-js \"src/features/**/*.feature\" --require \"src/step-definitions/**/*.js\" --require \"src/support/world.js\" --require \"src/support/hooks.js\" --format json:reports/cucumber-report.json --format html:reports/cucumber-report.html",
+    "test:ui": "cucumber-js \"src/features/**/*.feature\" --require \"src/step-definitions/**/*.js\" --require \"src/support/world.js\" --require \"src/support/hooks.js\" --tags @ui --format json:reports/ui-report.json --format html:reports/ui-report.html",
+    "test:api": "cucumber-js \"src/features/**/*.feature\" --require \"src/step-definitions/**/*.js\" --require \"src/support/world.js\" --require \"src/support/hooks.js\" --tags @api --format json:reports/api-report.json --format html:reports/api-report.html",
+    "test:smoke": "cucumber-js \"src/features/**/*.feature\" --require \"src/step-definitions/**/*.js\" --require \"src/support/world.js\" --require \"src/support/hooks.js\" --tags @smoke --format json:reports/smoke-report.json --format html:reports/smoke-report.html",
+    "test:ci": "npm run test:api && npm run test:ui && npm run report:html",
     "test:ui:report": "npm run test:ui && npm run report:html && npm run report:pdf",
     "test:api:report": "npm run test:api && npm run report:html && npm run report:pdf",
     "test:smoke:report": "npm run test:smoke && npm run report:html && npm run report:pdf",
-    "test:all": "npm run test:ui && npm run test:api && npm run test:smoke && npm run report:html && npm run report:pdf",
-
-    
-    "report:html": "node scripts/generate-html-reporter.js",
+    "test:all": "npm run test:api; npm run test:ui; npm run test:smoke; npm run report:html; npm run report:pdf",
+    "report:html": "npx multiple-cucumber-html-reporter --reportName 'Parabank Automation Report' --jsonDir reports --reportPath reports/html-report --displayDuration --openReport false --pageTitle 'Test Results'",
     "report:pdf": "node scripts/generate-pdf-reporter.js",
-
-    "test:headless": "HEADLESS=true cucumber-js",
-    "test:headed": "HEADLESS=false cucumber-js",
-    "test:debug": "HEADLESS=false cucumber-js --tags @debug"
+    "report:extent": "node scripts/generate-html-reporter.js",
+    "test:headless": "HEADLESS=true npm run test",
+    "test:headed": "HEADLESS=false npm run test",
+    "test:debug": "HEADLESS=false cucumber-js --tags @debug --format pretty",
+    "test:parallel": "cucumber-js --parallel 2",
+    "install:browsers": "npx playwright install --with-deps",
+    "postinstall": "npm run install:browsers || echo 'Browser installation skipped'",
+    "lint": "echo 'Linting not configured'",
+    "audit:security": "npm audit --audit-level moderate"
   },
   "keywords": [
     "cucumber",
     "playwright",
     "testing",
     "automation",
-    "parabank"
+    "parabank",
+    "jenkins",
+    "ci-cd"
   ],
-  "author": "Your Name",
+  "author": "QA Team",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.11.0",
-    "dotenv": "^17.2.2",
-    "fs-extra": "^11.3.1",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.2.0",
     "pdf-lib": "^1.17.1",
-    "playwright": "^1.40.0"
+    "playwright": "^1.40.1",
+    "moment": "^2.29.4"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^12.2.0",
-    "@cucumber/messages": "^29.0.1",
-    "@playwright/test": "^1.55.0",
-    "@types/axios": "^0.9.36",
-    "@types/node": "^20.0.0",
+    "@cucumber/cucumber": "^10.0.1",
+    "@cucumber/messages": "^24.1.0",
+    "@playwright/test": "^1.40.1",
+    "@types/node": "^20.10.0",
+    "cucumber-html-reporter": "^7.1.0",
     "html-pdf": "^3.0.1",
-    "multiple-cucumber-html-reporter": "^3.9.3",
-    "puppeteer": "^24.20.0"
+    "multiple-cucumber-html-reporter": "^3.5.0",
+    "puppeteer": "^21.6.1",
+    "allure-commandline": "^2.25.0",
+    "allure-cucumberjs": "^2.5.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "your-repository-url"
-  }
+    "url": "https://github.com/nishtha47/cucumber-playwright-javascript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nishtha47/cucumber-playwright-javascript/issues"
+  },
+  "homepage": "https://github.com/nishtha47/cucumber-playwright-javascript#readme"
 }
