@@ -1,0 +1,960 @@
+[
+  {
+    "description": "  As a developer\n  I want to test Parabank API endpoints\n  So that I can ensure API functionality works correctly",
+    "elements": [
+      {
+        "description": "",
+        "id": "parabank-api-automation;find-transactions-by-amount",
+        "keyword": "Scenario",
+        "line": 11,
+        "name": "Find Transactions by Amount",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1307124
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 12,
+            "name": "I have a user account with transaction history",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 79250
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 13,
+            "name": "I have made a bill payment of \"50.00\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:80"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 107458
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 14,
+            "name": "I search for transactions using \"Find Transactions\" API",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:127"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 55790
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 15,
+            "name": "I filter by amount \"50.00\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:135"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 83582
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 16,
+            "name": "I should receive a valid JSON response",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:179"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 68832
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 17,
+            "name": "the response should contain transaction details",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:210"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 54792
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 18,
+            "name": "transaction amount should match \"50.00\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:215"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 73167
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 19,
+            "name": "transaction type should be \"Debit\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:223"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 83542
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 10
+          },
+          {
+            "name": "@transactions",
+            "line": 10
+          },
+          {
+            "name": "@search",
+            "line": 10
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;validate-transaction-response-structure",
+        "keyword": "Scenario",
+        "line": 22,
+        "name": "Validate Transaction Response Structure",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 128833
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 23,
+            "name": "I have a user account with transaction history",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:46"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 46415
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 24,
+            "name": "I search for transactions using \"Find Transactions\" API",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:127"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 45042
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 25,
+            "name": "the JSON response should have correct structure",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:231"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 84040
+            }
+          },
+          {
+            "arguments": [
+              {
+                "rows": [
+                  {
+                    "cells": [
+                      "field",
+                      "type"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "id",
+                      "number"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "accountId",
+                      "number"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "type",
+                      "string"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "date",
+                      "string"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "amount",
+                      "number"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "description",
+                      "string"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "keyword": "And ",
+            "line": 26,
+            "name": "response should contain required fields:",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:240"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 139957
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 34,
+            "name": "all date fields should be in valid format",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:251"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 47750
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 35,
+            "name": "all amount fields should be numeric",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:186"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 41917
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 21
+          },
+          {
+            "name": "@transactions",
+            "line": 21
+          },
+          {
+            "name": "@validation",
+            "line": 21
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;find-transactions-by-different-criteria",
+        "keyword": "Scenario Outline",
+        "line": 46,
+        "name": "Find Transactions by Different Criteria",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 75832
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 39,
+            "name": "I have a user account with multiple transactions",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:62"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 70207
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 40,
+            "name": "I search for transactions by \"amount\" with value \"100.00\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:143"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 65500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 41,
+            "name": "I should receive filtered results",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:259"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 26167
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 42,
+            "name": "all returned transactions should match the \"amount\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:264"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 51916
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 37
+          },
+          {
+            "name": "@transactions",
+            "line": 37
+          },
+          {
+            "name": "@filter",
+            "line": 37
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;find-transactions-by-different-criteria",
+        "keyword": "Scenario Outline",
+        "line": 47,
+        "name": "Find Transactions by Different Criteria",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 62667
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 39,
+            "name": "I have a user account with multiple transactions",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:62"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 27833
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 40,
+            "name": "I search for transactions by \"type\" with value \"Debit\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:143"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 33082
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 41,
+            "name": "I should receive filtered results",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:259"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 18624
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 42,
+            "name": "all returned transactions should match the \"type\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:264"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 26999
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 37
+          },
+          {
+            "name": "@transactions",
+            "line": 37
+          },
+          {
+            "name": "@filter",
+            "line": 37
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;find-transactions-by-different-criteria",
+        "keyword": "Scenario Outline",
+        "line": 48,
+        "name": "Find Transactions by Different Criteria",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 54916
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 39,
+            "name": "I have a user account with multiple transactions",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:62"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 28333
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 40,
+            "name": "I search for transactions by \"type\" with value \"Credit\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:143"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 29083
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 41,
+            "name": "I should receive filtered results",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:259"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 17790
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 42,
+            "name": "all returned transactions should match the \"type\"",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:264"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 22625
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 37
+          },
+          {
+            "name": "@transactions",
+            "line": 37
+          },
+          {
+            "name": "@filter",
+            "line": 37
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;validate-account-balance-via-api",
+        "keyword": "Scenario",
+        "line": 51,
+        "name": "Validate Account Balance via API",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 46792
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 52,
+            "name": "I have created accounts through UI",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:95"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 35582
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 53,
+            "name": "I fetch account details via API",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:156"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 28666
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 54,
+            "name": "account balance should match UI displayed balance",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:205"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 28707
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 55,
+            "name": "account information should be consistent",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:276"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 27582
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 56,
+            "name": "API response time should be under 2 seconds",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:282"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 38832
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 50
+          },
+          {
+            "name": "@accounts",
+            "line": 50
+          },
+          {
+            "name": "@balance",
+            "line": 50
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;api-error-handling",
+        "keyword": "Scenario",
+        "line": 59,
+        "name": "API Error Handling",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 48374
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 60,
+            "name": "I have API client configured",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:101"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 71542
+            }
+          },
+          {
+            "arguments": [
+              {
+                "rows": [
+                  {
+                    "cells": [
+                      "request_type",
+                      "expected_status"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Invalid account ID",
+                      "404"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Missing parameters",
+                      "400"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Invalid amount",
+                      "400"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "keyword": "When ",
+            "line": 61,
+            "name": "I make invalid API requests:",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:169"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 71791
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 66,
+            "name": "I should receive appropriate error responses",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:287"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 45500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 67,
+            "name": "error messages should be descriptive",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:323"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 36625
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 68,
+            "name": "response format should be consistent",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:330"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 33333
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 58
+          },
+          {
+            "name": "@error-handling",
+            "line": 58
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "parabank-api-automation;ui-and-api-data-consistency",
+        "keyword": "Scenario",
+        "line": 71,
+        "name": "UI and API Data Consistency",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I have API client configured for Parabank",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:41"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 67292
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 72,
+            "name": "I have performed banking operations via UI",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:106"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 44916
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 73,
+            "name": "I have made transactions through the web interface",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:114"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 32832
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 74,
+            "name": "I fetch the same data via API calls",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:161"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 28707
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 75,
+            "name": "UI and API data should be consistent",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:194"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 676458
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 76,
+            "name": "transaction details should match exactly",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:295"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 36165
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 77,
+            "name": "account balances should be synchronized",
+            "match": {
+              "location": "src/step-definitions/parabank-api-steps.js:307"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 66707
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@api",
+            "line": 1
+          },
+          {
+            "name": "@api",
+            "line": 70
+          },
+          {
+            "name": "@integration",
+            "line": 70
+          }
+        ],
+        "type": "scenario"
+      }
+    ],
+    "id": "parabank-api-automation",
+    "line": 2,
+    "keyword": "Feature",
+    "name": "Parabank API Automation",
+    "tags": [
+      {
+        "name": "@api",
+        "line": 1
+      }
+    ],
+    "uri": "src/features/parabank-api.feature"
+  }
+]

@@ -9,8 +9,10 @@ class CustomWorld extends World {
         this.page = null;
         this.config = { baseUrl: 'https://parabank.parasoft.com' };
         this.testData = {};
+        this.apiResponse = { transactions: [] }; // ✅ always initialize with transactions array
     }
 
+    // -------------------- Browser Helpers --------------------
     async initBrowser() {
         this.browser = await chromium.launch({ headless: false });
         this.page = await this.browser.newPage();
@@ -20,6 +22,7 @@ class CustomWorld extends World {
         if (this.browser) await this.browser.close();
     }
 
+    // -------------------- Test Data Helpers --------------------
     setTestData(key, value) {
         this.testData[key] = value;
     }
@@ -28,6 +31,7 @@ class CustomWorld extends World {
         return this.testData[key];
     }
 
+    // -------------------- Attachments --------------------
     async attachScreenshot(name) {
         if (this.page) {
             const buffer = await this.page.screenshot();
@@ -37,7 +41,13 @@ class CustomWorld extends World {
         }
     }
 
-    // -------------------- Allure helper --------------------
+    async attachJson(name, obj) {
+        if (this.attach) {
+            await this.attach(JSON.stringify(obj, null, 2), 'application/json');
+        }
+    }
+
+    // -------------------- Allure Helpers --------------------
     async allureStep(name, stepFn) {
         if (!this.attach) return stepFn(); // fallback if Allure not attached
         try {
@@ -47,12 +57,29 @@ class CustomWorld extends World {
         }
     }
 
-    async attachJson(name, obj) {
-        if (this.attach) {
-            await this.attach(JSON.stringify(obj, null, 2), 'application/json');
-        }
+    // -------------------- API Helpers --------------------
+    setApiResponse(response) {
+        // ✅ Ensure transactions always exist, default empty array
+        this.apiResponse = {
+            ...response,
+            transactions: response?.transactions || []
+        };
     }
 
+    getApiResponse() {
+        return this.apiResponse;
+    }
+
+    // ✅ Normalize numeric fields (id, accountId) even if strings
+    normalizeTransactionFields(txns) {
+        return (txns || []).map(txn => ({
+            ...txn,
+            id: Number(txn.id),
+            accountId: Number(txn.accountId)
+        }));
+    }
+
+    // -------------------- Test Data Generators --------------------
     generateUniqueUserData() {
         const random = Math.floor(Math.random() * 10000);
         return {
